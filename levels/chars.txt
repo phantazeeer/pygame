@@ -1,0 +1,7 @@
+dc = 100
+hc = 150
+hp = 120
+damage = 40
+money = 243
+lvl = 1
+bul_c = 3210
