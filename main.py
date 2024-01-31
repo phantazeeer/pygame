@@ -97,29 +97,33 @@ class Crime:
 
 
 class Narco(pygame.sprite.Sprite):
-    image1 = load_image("пьяный_спрайт.png")
-    image2 = load_image("blood1.png")
-    image3 = load_image("blood2.png")
-    image4 = load_image("blood3.png")
-
-    def __init__(self):
+    def __init__(self, x, y):
         super().__init__(enemies_sprites)
-        self.image = Narco.image1
-        self.rect = self.image.get_rect()
+        self.frames = []
+        self.cut_sheet(load_image("zombie_anim.png"), 16, 1)
+        self.cur_frame = 0
+        self.image = self.frames[self.cur_frame]
         self.mask = pygame.mask.from_surface(self.image)
         self.rect.x = 2000
         self.rect.y = random.randint(20, 900)
         self.y = self.rect.y
         self.speed = None
-        self.vx = -3
-        self.vy = 0
+        self.vx = x
+        self.vy = y
         self.hp = 120
 
+    def cut_sheet(self, sheet, columns, rows):
+        self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
+                                sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_location = (self.rect.w * i, self.rect.h * j)
+                self.frames.append(sheet.subsurface(pygame.Rect(
+                    frame_location, self.rect.size)))
+
     def update(self):
-        if 120 * 2 / 3 < self.hp < 120:
-            self.image = Narco.image2
-        if 120 / 3 < self.hp < 120 * 2 / 3:
-            self.image = Narco.image3
+        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+        self.image = self.frames[self.cur_frame]
         if not pygame.sprite.spritecollideany(self, bullet_sprites):
             self.rect = self.rect.move(self.vx, self.vy)
         elif self.hp:
@@ -165,9 +169,9 @@ def end(stat, killed):
     screen = pygame.display.set_mode(size)
     font = pygame.font.Font(None, 25)
     if not killed:
-        text = font.render(f"Конец игры, вы расстреляли {stat} человек из страйкбольного оружия", True, (0, 255, 255))
+        text = font.render(f"Конец игры, вы расстреляли {stat} зомби из страйкбольного оружия", True, (0, 255, 255))
     else:
-        text = font.render(f"Вас заколол наркоман", True, (0, 255, 255))
+        text = font.render(f"Вас побили дубинкой", True, (0, 255, 255))
     text1 = font.render(f"Вийти отсюда", True, (0, 255, 255))
     pygame.draw.rect(screen, "green", (350, 400, 300, 50), 2)
     pygame.draw.rect(screen, "green", (350, 465, 300, 50), 2)
@@ -264,7 +268,7 @@ def game():
     pygame.init()
     screen = pygame.display.set_mode(size)
     pygame.display.flip()
-    fps = 144
+    fps = 30
     run = True
     SPAWN_MOBS = pygame.USEREVENT + 1
     pygame.time.set_timer(SPAWN_MOBS, 500)
@@ -296,7 +300,7 @@ def game():
     kill = False
     lvl = LoadLevel(1)
     c = 0
-    enemies.append(Narco())
+    enemies.append(Narco(-3, 0))
     shoot = False
     stats = Progress()
     gun.change_stats([stats.get_char()[2], stats.get_char()[3]])
@@ -334,7 +338,7 @@ def game():
             if event.type == pygame.MOUSEBUTTONUP:
                 shoot = False
             if event.type == SPAWN_MOBS:
-                enemies.append(Narco())
+                enemies.append(Narco(-3, 0))
             if shoot and event.type != SPAWN_MOBS:
                 bul_c += 1
                 bullets.append(Bullet(event.pos[0] + 99, event.pos[1] - 28, gun.get_char()[1]))
