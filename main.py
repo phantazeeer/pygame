@@ -3,6 +3,14 @@ import os
 import random
 
 
+def lvl_choose(lvl, up):
+    if lvl < Progress().get_char()[5] and up:
+        lvl += 1
+    elif lvl > 1 and not up:
+        lvl -= 1
+    return lvl
+
+
 class Progress:
     def __init__(self):
         # sp[dc, hc, hp, damage, money, lvl, bul_count]
@@ -136,7 +144,7 @@ class Narco(pygame.sprite.Sprite):
 
 
 class Gun(pygame.sprite.Sprite):
-    image = load_image("gun.png")
+    image = load_image("char.png")
 
     def __init__(self):
         super().__init__(all_sprites)
@@ -172,7 +180,7 @@ def end(stat, killed):
         text = font.render(f"Конец игры, вы расстреляли {stat} зомби из страйкбольного оружия", True, (0, 255, 255))
     else:
         text = font.render(f"Вас побили дубинкой", True, (0, 255, 255))
-    text1 = font.render(f"Вийти отсюда", True, (0, 255, 255))
+    text1 = font.render(f"Выйти отсюда", True, (0, 255, 255))
     pygame.draw.rect(screen, "green", (350, 400, 300, 50), 2)
     pygame.draw.rect(screen, "green", (350, 465, 300, 50), 2)
     pygame.draw.rect(screen, "green", (350, 530, 300, 50), 2)
@@ -207,21 +215,29 @@ def start():
     size = width, height = 1000, 1000
     pygame.init()
     screen = pygame.display.set_mode(size)
+    global lvl
     font = pygame.font.Font(None, 50)
     text = font.render("начать", True, (0, 255, 255))
-    text2 = font.render("Страйкбольный ак 47 против наркоманов", True, (0, 255, 255))
-    pygame.draw.rect(screen, "green", (350, 400, 300, 50), 2)
-    pygame.draw.rect(screen, "green", (350, 465, 300, 50), 2)
-    pygame.draw.rect(screen, "green", (350, 530, 300, 50), 2)
-    text1 = font.render(f"Вийти отсюда", True, (0, 255, 255))
-    screen.blit(text2, (200, 300))
-    screen.blit(text, (350, 400))
-    screen.blit(font.render(f"статистика", True, (0, 255, 255)), (350, 465))
-    screen.blit(text1, (350, 530))
+    text1 = font.render(f"Выйти отсюда", True, (0, 255, 255))
+    text2 = font.render("Страйкбольный ак 47 против зомби", True, (0, 255, 255))
     pygame.display.flip()
     run = True
     mode = 0
     while run:
+        screen.fill((0, 0, 0))
+        pygame.draw.rect(screen, "green", (350, 400, 300, 50), 2)
+        pygame.draw.rect(screen, "green", (350, 465, 300, 50), 2)
+        pygame.draw.rect(screen, "green", (350, 530, 300, 50), 2)
+        screen.blit(text2, (200, 300))
+        screen.blit(text, (350, 400))
+        screen.blit(font.render(f"статистика", True, (0, 255, 255)), (350, 465))
+        screen.blit(text1, (350, 530))
+        screen.blit(font.render(f"выбор уровня", True, (0, 255, 255)), (375, 590))
+        pygame.draw.rect(screen, "blue", (300, 620, 50, 50), 0)
+        pygame.draw.rect(screen, "blue", (650, 620, 50, 50), 0)
+        pygame.draw.polygon(screen, "green", [(345, 625), (305, 645), (345, 665)], 0)
+        pygame.draw.polygon(screen, "green", [(655, 625), (695, 645), (655, 665)], 0)
+        screen.blit(font.render(f"{lvl}", True, (0, 255, 255)), (485, 630))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -236,6 +252,11 @@ def start():
                 if 350 < event.pos[0] < 650 and 530 < event.pos[1] < 580:
                     run = False
                     mode = 3
+                if 300 < event.pos[0] < 350 and 620 < event.pos[1] < 670:
+                    lvl = lvl_choose(lvl, False)
+                elif 650 < event.pos[0] < 700 and 620 < event.pos[1] < 670:
+                    lvl = lvl_choose(lvl, True)
+        pygame.display.flip()
     pygame.quit()
     return mode
 
@@ -262,13 +283,14 @@ def statistics():
     pygame.quit()
     return 0
 
+
 def game():
     # pygame init
     size = 1920, 1080
     pygame.init()
     screen = pygame.display.set_mode(size)
     pygame.display.flip()
-    fps = 30
+    fps = 60
     run = True
     SPAWN_MOBS = pygame.USEREVENT + 1
     pygame.time.set_timer(SPAWN_MOBS, 500)
@@ -280,6 +302,7 @@ def game():
     global ups_sprites
     global bullet_sprites
     global all_sprites
+    global lvl
     gun = Gun()
     hp_up = pygame.sprite.Sprite()
     bullet_up = pygame.sprite.Sprite()
@@ -298,7 +321,7 @@ def game():
     bullets = []
     enemies = []
     kill = False
-    lvl = LoadLevel(1)
+    level = LoadLevel(lvl)
     c = 0
     enemies.append(Narco(-3, 0))
     shoot = False
@@ -328,7 +351,7 @@ def game():
                 shoot = True
             if event.type == pygame.MOUSEMOTION:
                 pygame.mouse.set_visible(False)
-                ug = gun.update(event.pos[0] - 99, event.pos[1] - 28)
+                ug = gun.update(event.pos[0] - 33, event.pos[1] - 23)
                 if ug == 'd':
                     kill = True
                 elif ug:
@@ -364,6 +387,10 @@ def game():
         screen.blit(pygame.font.Font(None, 30).render(f"{stats.get_char()[0]}", True, (0, 255, 0)), (up_x_coords + 90, up_y_coords + 90))
         screen.blit(pygame.font.Font(None, 30).render(f"{stats.get_char()[1]}", True, (0, 255, 0)),
                     (up_x_coords + 10, up_y_coords + 90))
+        text = font.render(f"HP: {gun.get_char()[0]}", True, (0, 255, 0))
+        screen.blit(text, (500, 1000))
+        text = font.render(f"MOBs: {level.mob_counter() - c}", True, (0, 255, 0))
+        screen.blit(text, (700, 1000))
 
         # stat interface
         screen.blit(font.render(f"money: {money_val}", True, (0, 255, 0)), (30, 1000))
@@ -371,7 +398,7 @@ def game():
         # pygame init
         clock.tick(fps)
         pygame.display.flip()
-        if c == lvl.mob_counter():
+        if c == level.mob_counter():
             run = False
 
     pygame.quit()
@@ -379,6 +406,7 @@ def game():
     return end(c, killed)
 
 
+lvl = 1
 if __name__ == "__main__":
     mode = 0
     while mode != 3:

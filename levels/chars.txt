@@ -1,7 +1,7 @@
 dc = 100
-hc = 150
-hp = 120
+hc = 1750
+hp = 760
 damage = 40
-money = 243
-lvl = 1
-bul_c = 3210
+money = 1323
+lvl = 2
+bul_c = 6687
